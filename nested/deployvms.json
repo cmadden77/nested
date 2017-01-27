@@ -388,10 +388,6 @@
     }
 
   ],
-  "outputs": {
-    "vmnames": {
-      "type": "array",
-      "value": "[concat(variables('vmName'),copyIndex(1))]"
-    }
+  "outputs": {    }
   }
 }
