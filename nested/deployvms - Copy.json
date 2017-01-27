@@ -72,15 +72,7 @@
     "vmSize": "Standard_A1",
     "vmDataDiskSize": "300",
     "vmNicName": "[tolower(concat('nc', resourceGroup().name))]",
-    "Template": {
-      "BaseUrl": "https://raw.githubusercontent.com/cmadden77/nested/master/nested/",
-      "backup": "backup.json",
-      "oms": "OMS.json",
-      "malware": "malware.json",
-      "storageaccount": "storageaccount.json",
-      "deployvms": "deployvms.json",
-      "encryptvhd": "encryptvhd.json"
-    },
+
     "existingVNETName": "MGMTVNET",
     "vnetID": "[resourceId(parameters('existingRG'), 'Microsoft.Network/virtualNetworks', variables('existingVNETName'))]",
     "subnetId": "MGMTSubnet",
@@ -92,16 +84,7 @@
     "domaintojoin": "corp.convatec.com",
     "configurationFunction": "iiswebsite.ps1\\iiswebsite",
     "modulesUrl": "https://github.com/cmadden77/IFWeek2017/raw/master/iiswebsite.zip",
-
-    "subscriptionID": "/subscriptions/91716dc0-0018-48e4-84ad-db239ee753db/resourceGroups/",
-    "existingKVRGName": "Restricted-Prod-EU2-RG",
-    "existingKVName": "Deployment-Prod-EU2-KV",
-    "LocalPasswordSecret": "Temp-Localadminpassword",
-    "DomainJoinPasswordSecret": "Temp-DomainJoinPassword",
-    "OMSPrimarySecret": "ConvaTecOMSPrimaryKey",
-    "OMSWorkspace": "ConvaTectOMSWorkSpace",
-    "aadClientSecret": "aadClientSecret"
-
+    "Vaultname": "deployment-prod-eu2-kv"
 
   },
   "resources": [
@@ -264,72 +247,6 @@
 
               },
               "Location": "[variables('location')]"
-            }
-          }
-        },
-        {
-          "type": "Microsoft.Compute/virtualMachines/extensions",
-          "name": "[concat(variables('vmName'),copyIndex(01),'/','Antimalware')]",
-          "apiVersion": "2015-05-01-preview",
-          "location": "[resourceGroup().location]",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(01),'/extensions/','dscExtension')]"
-          ],
-          "properties": {
-            "publisher": "Microsoft.Azure.Security",
-            "type": "IaaSAntimalware",
-            "typeHandlerVersion": "1.1",
-            "settings": {
-              "AntimalwareEnabled": "true",
-              "Exclusions": {
-                "Paths": "f:\\sysvol\\;f:\\ntds\\;",
-                "Extensions": ".mdf;.ldf;.ndf;.bak;.trn;.edb;.sdb;.chk;.jrs;.pol;.dit",
-                "Processes": "sqlserver.exe;ReportingServicesService.exe;MSMDSrv.exe"
-              },
-              "RealtimeProtectionEnabled": "true",
-              "ScheduledScanSettings": {
-                "isEnabled": "true",
-                "scanType": "Quick",
-                "day": "7",
-                "time": "120"
-              }
-            },
-            "protectedSettings": null
-          }
-        },
-        {
-          "name": "InstallOMS",
-          "type": "Microsoft.Resources/deployments",
-          "apiVersion": "[variables('apiVersion')]",
-          "dependsOn": [
-            "[concat('Microsoft.Resources/deployments/', 'InstallAntimalware')]"
-          ],
-          "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-              "uri": "[concat(variables('Template').BaseUrl, variables('Template').oms)]",
-              "contentVersion": "1.0.0.0"
-            },
-            "parameters": {
-              "vmName": {
-                "value": "[reference('DeployVM').outputs.vmnames]"
-              },
-              "workspaceId": {
-                "reference": {
-                  "keyVault": {
-                    "id": "[concat(variables('subscriptionID'),variables('existingKVRGName'), '/providers/Microsoft.KeyVault/vaults/', variables('existingKVName'))]"
-                  },
-                  "secretName": "[variables('OMSWorkspace')]"
-                }
-              },
-              "workspaceKey": {
-                "reference": {
-                  "keyVault": {
-                    "id": "[concat(variables('subscriptionID'),variables('existingKVRGName'), '/providers/Microsoft.KeyVault/vaults/', variables('existingKVName'))]"
-                  },
-                  "secretName": "[variables('OMSPrimarySecret')]"
-                }
-              }
             }
           }
         }
