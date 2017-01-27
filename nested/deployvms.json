@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
@@ -40,7 +40,7 @@
         "description": "Code for application or service"
       }
     },
-    "StorageAccountID": {
+    "StorageAccount": {
       "type": "string",
       "metadata": {
         "description": "ID location for Storage Account"
@@ -165,7 +165,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat(reference(parameters('StorageAccountID')).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmOsDiskName'),copyIndex(01),'.vhd')]"
+              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('StorageAccount')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmOsDiskName'),copyIndex(01),'.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -173,7 +173,7 @@
           "dataDisks": [
             {
               "vhd": {
-                "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('uniqueStorageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmDataDiskName'),copyIndex(01),'-0','.vhd')]"
+                "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('StorageAccount')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmDataDiskName'),copyIndex(01),'-0','.vhd')]"
               },
               "name": "[concat(variables('vmDataDiskName'),copyIndex(01),'-0')]",
               "createOption": "Empty",
