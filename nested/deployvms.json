@@ -33,6 +33,12 @@
         "description": "Workspace Key for OMS."
       }
     },
+    "aadClientSecret": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Workspace Key for OMS."
+      }
+    },
     "existingRG": {
       "type": "string",
       "defaultValue": "temp-RG",
@@ -120,7 +126,16 @@
       "volumeType": "All",
       "sequenceVersion": "1.0"
     },
-    "aadclientid": "1ef10016-ebdb-4591-a8ca-597a615b9e6e"
+    "aadclientid": "1ef10016-ebdb-4591-a8ca-597a615b9e6e",
+
+    "extensionName": "AzureDiskEncryption",
+    "extensionVersion": "1.1",
+    "encryptionOperation": "EnableEncryption",
+    "keyEncryptionAlgorithm": "RSA-OAEP",
+    "updateVmUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-encrypt-running-windows-vm/updatevm-',variables('Encryption').useExistingKek,'.json')]",
+    "keyVaultURL": "[concat('https://', variables('existingKVRGName'), '.vault.azure.net/')]",
+    "keyVaultResourceID": "[concat(subscription().id,'/resourceGroups/',variables('existingKVRGName'),'/providers/Microsoft.KeyVault/vaults/', variables('existingKVName'))]"
+
 
   },
   "resources": [
@@ -336,6 +351,59 @@
             },
             "protectedSettings": {
               "workspaceKey": "[parameters('workspaceKey')]"
+            }
+          }
+        },
+        {
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(variables('vmName'),copyIndex(1),'/', variables('extensionName'))]",
+          "apiVersion": "2016-03-30",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "publisher": "Microsoft.Azure.Security",
+            "type": "AzureDiskEncryption",
+            "typeHandlerVersion": "[variables('extensionVersion')]",
+            "autoUpgradeMinorVersion": true,
+            "forceUpdateTag": "[variables('Encryption').sequenceVersion]",
+            "settings": {
+              "AADClientID": "[variables('aadClientID')]",
+              "KeyVaultURL": "[variables('keyVaultURL')]",
+              "KeyEncryptionKeyURL": "[variables('Encryption').keyEncryptionKeyURL]",
+              "KeyEncryptionAlgorithm": "[variables('keyEncryptionAlgorithm')]",
+              "VolumeType": "[variables('Encryption').volumeType]",
+              "EncryptionOperation": "[variables('encryptionOperation')]"
+            },
+            "protectedSettings": {
+              "AADClientSecret": "[parameters('aadClientSecret')]"
+            }
+          }
+        },
+        {
+          "name": "updatevm",
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "2015-01-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines/extensions',  variables('vmName'),copyIndex(1), variables('extensionName'))]"
+          ],
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "[variables('updateVmUrl')]",
+              "contentVersion": "1.0.0.0"
+            },
+            "parameters": {
+              "vmName": {
+                "value": "[variables('vmName'),copyIndex(1)]"
+              },
+              "keyVaultResourceID": {
+                "value": "[variables('keyVaultResourceID')]"
+              },
+              "keyVaultSecretUrl": {
+                "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions',  variables('vmName'),copyIndex(1), variables('extensionName'))).instanceView.statuses[0].message]"
+              },
+              "keyEncryptionKeyURL": {
+                "value": "[variables('Encryption').keyEncryptionKeyURL]"
+              }
             }
           }
         }
