@@ -21,6 +21,24 @@
         "description": "password for domain and forlocal admin."
       }
     },
+    "workspaceId": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Workspace ID for OMS."
+      }
+    },
+    "workspaceKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Workspace Key for OMS."
+      }
+    },
+    "aadClientSecret": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Workspace Key for OMS."
+      }
+    },
     "existingRG": {
       "type": "string",
       "defaultValue": "temp-RG",
@@ -46,14 +64,14 @@
         "description": "ID location for Storage Account"
       }
     },
-      "uniqueid": {
-        "type": "string",
-        "defaultValue": "",
-        "metadata": {
-          "description": "Code for application or service"
-        }
+    "uniqueid": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Code for application or service"
       }
-    },
+    }
+  },
   "variables": {
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
@@ -72,7 +90,15 @@
     "vmSize": "Standard_A1",
     "vmDataDiskSize": "300",
     "vmNicName": "[tolower(concat('nc', resourceGroup().name))]",
-
+    "Template": {
+      "BaseUrl": "https://raw.githubusercontent.com/cmadden77/nested/master/nested/",
+      "backup": "backup.json",
+      "oms": "OMS.json",
+      "malware": "malware.json",
+      "storageaccount": "storageaccount.json",
+      "deployvms": "deployvms.json",
+      "encryptvhd": "encryptvhd.json"
+    },
     "existingVNETName": "MGMTVNET",
     "vnetID": "[resourceId(parameters('existingRG'), 'Microsoft.Network/virtualNetworks', variables('existingVNETName'))]",
     "subnetId": "MGMTSubnet",
@@ -84,14 +110,39 @@
     "domaintojoin": "corp.convatec.com",
     "configurationFunction": "iiswebsite.ps1\\iiswebsite",
     "modulesUrl": "https://github.com/cmadden77/IFWeek2017/raw/master/iiswebsite.zip",
-    "Vaultname": "deployment-prod-eu2-kv"
+
+    "subscriptionID": "/subscriptions/91716dc0-0018-48e4-84ad-db239ee753db/resourceGroups/",
+    "existingKVRGName": "Restricted-Prod-EU2-RG",
+    "existingKVName": "Deployment-Prod-EU2-KV",
+    "LocalPasswordSecret": "Temp-Localadminpassword",
+    "DomainJoinPasswordSecret": "Temp-DomainJoinPassword",
+    "OMSPrimarySecret": "ConvaTecOMSPrimaryKey",
+    "OMSWorkspace": "ConvaTectOMSWorkSpace",
+    "aadClientSecret": "aadClientSecret",
+
+    "Encryption": {
+      "useExistingKek": "nokek",
+      "keyEncryptionKeyURL": "",
+      "volumeType": "All",
+      "sequenceVersion": "1.0"
+    },
+    "aadclientid": "1ef10016-ebdb-4591-a8ca-597a615b9e6e",
+
+    "extensionName": "AzureDiskEncryption",
+    "extensionVersion": "1.1",
+    "encryptionOperation": "EnableEncryption",
+    "keyEncryptionAlgorithm": "RSA-OAEP",
+    "updateVmUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-encrypt-running-windows-vm/updatevm-',variables('Encryption').useExistingKek,'.json')]",
+    "keyVaultURL": "[concat('https://', variables('existingKVRGName'), '.vault.azure.net/')]",
+    "keyVaultResourceID": "[concat(subscription().id,'/resourceGroups/',variables('existingKVRGName'),'/providers/Microsoft.KeyVault/vaults/', variables('existingKVName'))]"
+
 
   },
   "resources": [
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(variables('publicIPAddressName'),copyIndex(01))]",
+      "name": "[concat(variables('publicIPAddressName'),copyIndex(1))]",
       "location": "[variables('location')]",
       "copy": {
         "name": "publicIPLoop",
@@ -100,21 +151,21 @@
       "properties": {
         "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
         "dnsSettings": {
-          "domainNameLabel": "[concat(variables('uniqueDnsNameForPublicIP'),copyIndex(01))]"
+          "domainNameLabel": "[concat(variables('uniqueDnsNameForPublicIP'),copyIndex(1))]"
         }
       }
     },
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(variables('vmNicName'),copyIndex(01))]",
+      "name": "[concat(variables('vmNicName'),copyIndex(1))]",
       "location": "[variables('location')]",
       "copy": {
         "name": "nicLoop",
         "count": "[parameters('VMCount')]"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/',variables('publicIPAddressName'),copyIndex(01))]"
+        "[concat('Microsoft.Network/publicIPAddresses/',variables('publicIPAddressName'),copyIndex(1))]"
 
       ],
       "properties": {
@@ -124,7 +175,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(variables('publicIPAddressName'),copyIndex(01)))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(variables('publicIPAddressName'),copyIndex(1)))]"
               },
               "subnet": {
                 "id": "[variables('subnetRef')]"
@@ -137,21 +188,21 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat(variables('vmName'),copyIndex(01))]",
+      "name": "[concat(variables('vmName'),copyIndex(1))]",
       "location": "[variables('location')]",
       "copy": {
         "name": "vmLoop",
         "count": "[parameters('VMCount')]"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/',variables('vmNicName'),copyIndex(01))]"
+        "[concat('Microsoft.Network/networkInterfaces/',variables('vmNicName'),copyIndex(1))]"
       ],
       "properties": {
         "hardwareProfile": {
           "vmSize": "[variables('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[variables('vmName')]",
+          "computerName": "[concat(variables('vmName'),copyIndex(1))]",
           "adminUsername": "[variables('vmAdminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
@@ -165,7 +216,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('StorageAccount')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmOsDiskName'),copyIndex(01),'.vhd')]"
+              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('StorageAccount')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmOsDiskName'),copyIndex(1),'.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -173,9 +224,9 @@
           "dataDisks": [
             {
               "vhd": {
-                "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('StorageAccount')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmDataDiskName'),copyIndex(01),'-0','.vhd')]"
+                "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', parameters('StorageAccount')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmDataDiskName'),copyIndex(1),'-0','.vhd')]"
               },
-              "name": "[concat(variables('vmDataDiskName'),copyIndex(01),'-0')]",
+              "name": "[concat(variables('vmDataDiskName'),copyIndex(1),'-0')]",
               "createOption": "Empty",
               "caching": "None",
               "diskSizeGB": "[variables('vmDataDiskSize')]",
@@ -183,9 +234,9 @@
             },
             {
               "vhd": {
-                "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('uniqueStorageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmDataDiskName'),copyIndex(01),'-1','.vhd')]"
+                "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('uniqueStorageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmDataDiskName'),copyIndex(1),'-1','.vhd')]"
               },
-              "name": "[concat(variables('vmDataDiskName'),copyIndex(01),'-1')]",
+              "name": "[concat(variables('vmDataDiskName'),copyIndex(1),'-1')]",
               "createOption": "Empty",
               "caching": "None",
               "diskSizeGB": "[variables('vmDataDiskSize')]",
@@ -196,7 +247,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('vmNicName'),copyIndex(01)))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('vmNicName'),copyIndex(1)))]"
             }
           ]
         }
@@ -205,10 +256,10 @@
         {
           "apiVersion": "[variables('apiVersion')]",
           "type": "Microsoft.Compute/virtualMachines/extensions",
-          "name": "[concat(variables('vmName'),copyIndex(01),'/joindomain')]",
+          "name": "[concat(variables('vmName'),copyIndex(1),'/joindomain')]",
           "location": "[resourceGroup().location]",
           "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(01))]"
+            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]"
           ],
           "properties": {
             "protectedsettings": {
@@ -228,11 +279,11 @@
         {
           "apiVersion": "2015-06-15",
           "type": "Microsoft.Compute/virtualMachines/extensions",
-          "name": "[concat(variables('vmName'),copyIndex(01),'/dscExtension')]",
+          "name": "[concat(variables('vmName'),copyIndex(1),'/dscExtension')]",
           "location": "[variables('location')]",
           "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(01))]",
-            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(01),'/extensions/','joindomain')]"
+            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]",
+            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1),'/extensions/','joindomain')]"
           ],
           "properties": {
             "publisher": "Microsoft.Powershell",
@@ -249,15 +300,121 @@
               "Location": "[variables('location')]"
             }
           }
+        },
+        {
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(variables('vmName'),copyIndex(1),'/','Antimalware')]",
+          "apiVersion": "2015-05-01-preview",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]",
+            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1),'/extensions/','dscExtension')]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Azure.Security",
+            "type": "IaaSAntimalware",
+            "typeHandlerVersion": "1.1",
+            "settings": {
+              "AntimalwareEnabled": "true",
+              "Exclusions": {
+                "Paths": "f:\\sysvol\\;f:\\ntds\\;",
+                "Extensions": ".mdf;.ldf;.ndf;.bak;.trn;.edb;.sdb;.chk;.jrs;.pol;.dit",
+                "Processes": "sqlserver.exe;ReportingServicesService.exe;MSMDSrv.exe"
+              },
+              "RealtimeProtectionEnabled": "true",
+              "ScheduledScanSettings": {
+                "isEnabled": "true",
+                "scanType": "Quick",
+                "day": "7",
+                "time": "120"
+              }
+            },
+            "protectedSettings": null
+          }
+        },
+        {
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(variables('vmName'),copyIndex(1), '/Microsoft.EnterpriseCloud.Monitoring')]",
+          "apiVersion": "2015-06-15",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]",
+            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1),'/extensions/','Antimalware')]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+            "type": "MicrosoftMonitoringAgent",
+            "typeHandlerVersion": "1.0",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "workspaceId": "[parameters('workspaceId')]"
+            },
+            "protectedSettings": {
+              "workspaceKey": "[parameters('workspaceKey')]"
+            }
+          }
+        },
+        {
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(variables('vmName'),copyIndex(1),'/', variables('extensionName'))]",
+          "apiVersion": "2016-03-30",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]",
+            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1),'/extensions/','Microsoft.EnterpriseCloud.Monitoring')]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Azure.Security",
+            "type": "AzureDiskEncryption",
+            "typeHandlerVersion": "[variables('extensionVersion')]",
+            "autoUpgradeMinorVersion": true,
+            "forceUpdateTag": "[variables('Encryption').sequenceVersion]",
+            "settings": {
+              "AADClientID": "[variables('aadClientID')]",
+              "KeyVaultURL": "[variables('keyVaultURL')]",
+              "KeyEncryptionKeyURL": "[variables('Encryption').keyEncryptionKeyURL]",
+              "KeyEncryptionAlgorithm": "[variables('keyEncryptionAlgorithm')]",
+              "VolumeType": "[variables('Encryption').volumeType]",
+              "EncryptionOperation": "[variables('encryptionOperation')]"
+            },
+            "protectedSettings": {
+              "AADClientSecret": "[parameters('aadClientSecret')]"
+            }
+          }
         }
+
+
       ]
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('vmName'),copyIndex(1))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]"
+      ],
+      "properties": {
+        "storageProfile": {
+          "osDisk": {
+            "encryptionSettings": {
+              "diskEncryptionKey": {
+                "sourceVault": {
+                  "id": "[variables('keyVaultResourceID')]"
+                },
+                "secretUrl": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions',  variables('vmName'),copyIndex(1), variables('extensionName'))).instanceView.statuses[0].message]"
+              }
+            }
+          }
+        }
+      }
     }
 
   ],
   "outputs": {
     "vmnames": {
-      "type": "string",
-      "value": "[concat(variables('vmName'),copyIndex(01))]"
+      "type": "array",
+      "value": "[concat(variables('vmName'),copyIndex(1))]"
     }
   }
 }
