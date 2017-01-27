@@ -338,58 +338,58 @@
               "workspaceKey": "[parameters('workspaceKey')]"
             }
           }
+        }
+
+      ]
+    },
+    {
+      "name": "EncryptVHD",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "[variables('apiVersion')]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('Template').BaseUrl, variables('Template').encryptvhd)]",
+          "contentVersion": "1.0.0.0"
         },
-        {
-          "name": "EncryptVHD",
-          "type": "Microsoft.Resources/deployments",
-          "apiVersion": "[variables('apiVersion')]",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]",
-            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1),'/extensions/','Microsoft.EnterpriseCloud.Monitoring')]"
-          ],
-          "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-              "uri": "[concat(variables('Template').BaseUrl, variables('Template').encryptvhd)]",
-              "contentVersion": "1.0.0.0"
-            },
-            "parameters": {
-              "vmName": {
-                "value": "[concat(variables('vmName'),copyIndex(1))]"
+        "parameters": {
+          "vmName": {
+            "value": "[concat(variables('vmName'),copyIndex(1))]"
+          },
+          "aadClientID": {
+            "value": "[variables('aadclientid')]"
+          },
+          "aadClientSecret": {
+            "reference": {
+              "keyVault": {
+                "id": "[concat(variables('subscriptionID'),variables('existingKVRGName'), '/providers/Microsoft.KeyVault/vaults/', variables('existingKVName'))]"
               },
-              "aadClientID": {
-                "value": "[variables('aadclientid')]"
-              },
-              "aadClientSecret": {
-                "reference": {
-                  "keyVault": {
-                    "id": "[concat(variables('subscriptionID'),variables('existingKVRGName'), '/providers/Microsoft.KeyVault/vaults/', variables('existingKVName'))]"
-                  },
-                  "secretName": "[variables('aadClientSecret')]"
-                }
-              },
-              "keyVaultName": {
-                "value": "[variables('existingKVName')]"
-              },
-              "keyVaultResourceGroup": {
-                "value": "[variables('existingKVRGName')]"
-              },
-              "useExistingKek": {
-                "value": "[variables('Encryption').useExistingKek]"
-              },
-              "keyEncryptionKeyURL": {
-                "value": "[variables('Encryption').keyEncryptionKeyURL]"
-              },
-              "volumeType": {
-                "value": "[variables('Encryption').volumeType]"
-              },
-              "sequenceVersion": {
-                "value": "[variables('Encryption').sequenceVersion]"
-              }
+              "secretName": "[variables('aadClientSecret')]"
             }
+          },
+          "keyVaultName": {
+            "value": "[variables('existingKVName')]"
+          },
+          "keyVaultResourceGroup": {
+            "value": "[variables('existingKVRGName')]"
+          },
+          "useExistingKek": {
+            "value": "[variables('Encryption').useExistingKek]"
+          },
+          "keyEncryptionKeyURL": {
+            "value": "[variables('Encryption').keyEncryptionKeyURL]"
+          },
+          "volumeType": {
+            "value": "[variables('Encryption').volumeType]"
+          },
+          "sequenceVersion": {
+            "value": "[variables('Encryption').sequenceVersion]"
           }
         }
-      ]
+      }
     }
 
   ],
