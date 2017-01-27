@@ -40,14 +40,20 @@
         "description": "Code for application or service"
       }
     },
-    "uniqueid": {
+    "StorageAccountID": {
       "type": "string",
-      "defaultValue": "",
       "metadata": {
-        "description": "Code for application or service"
+        "description": "ID location for Storage Account"
       }
-    }
-  },
+    },
+      "uniqueid": {
+        "type": "string",
+        "defaultValue": "",
+        "metadata": {
+          "description": "Code for application or service"
+        }
+      }
+    },
   "variables": {
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
@@ -138,7 +144,6 @@
         "count": "[parameters('VMCount')]"
       },
       "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/',variables('uniqueStorageAccountName'))]",
         "[concat('Microsoft.Network/networkInterfaces/',variables('vmNicName'),copyIndex(01))]"
       ],
       "properties": {
@@ -160,7 +165,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('uniqueStorageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmOsDiskName'),copyIndex(01),'.vhd')]"
+              "uri": "[concat(reference(parameters('StorageAccountID')).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('vmOsDiskName'),copyIndex(01),'.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"

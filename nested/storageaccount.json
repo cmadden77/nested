@@ -42,8 +42,8 @@
   ],
   "outputs": {
     "storageAccountName": {
-      "type": "string",
-      "value": "[parameters('storageAccountName')]"
+      "type": "object",
+      "value": "[reference(concat('Microsoft.Storage/storageAccounts/', parameters('StorageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0])]"
     }
   }
 }
