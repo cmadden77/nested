@@ -379,89 +379,27 @@
           }
         },
         {
-          "name": "updatevm",
-          "type": "Microsoft.Resources/deployments",
-          "apiVersion": "2015-01-01",
-          "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines/extensions',  variables('vmName'),copyIndex(1), variables('extensionName'))]"
-          ],
+          "apiVersion": "2015-06-15",
+          "type": "Microsoft.Compute/virtualMachines",
+          "name": "[concat(variables('vmName'),copyIndex(1))]",
+          "location": "[resourceGroup().location]",
           "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-              "uri": "[variables('updateVmUrl')]",
-              "contentVersion": "1.0.0.0"
-            },
-            "parameters": {
-              "vmName": {
-                "value": "[variables('vmName'),copyIndex(1)]"
-              },
-              "keyVaultResourceID": {
-                "value": "[variables('keyVaultResourceID')]"
-              },
-              "keyVaultSecretUrl": {
-                "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions',  variables('vmName'),copyIndex(1), variables('extensionName'))).instanceView.statuses[0].message]"
-              },
-              "keyEncryptionKeyURL": {
-                "value": "[variables('Encryption').keyEncryptionKeyURL]"
+            "storageProfile": {
+              "osDisk": {
+                "encryptionSettings": {
+                  "diskEncryptionKey": {
+                    "sourceVault": {
+                      "id": "[variables('keyVaultResourceID')]"
+                    },
+                    "secretUrl": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions',  variables('vmName'),copyIndex(1), variables('extensionName'))).instanceView.statuses[0].message]"
+                  }
+                }
               }
             }
           }
         }
 
       ]
-    },
-    {
-      "name": "EncryptVHD",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "[variables('apiVersion')]",
-      "copy": {
-        "name": "vmLoop",
-        "count": "[parameters('VMCount')]"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('Template').BaseUrl, variables('Template').encryptvhd)]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "vmName": {
-            "value": "[concat(variables('vmName'),copyIndex(1))]"
-          },
-          "aadClientID": {
-            "value": "[variables('aadclientid')]"
-          },
-          "aadClientSecret": {
-            "reference": {
-              "keyVault": {
-                "id": "[concat(variables('subscriptionID'),variables('existingKVRGName'), '/providers/Microsoft.KeyVault/vaults/', variables('existingKVName'))]"
-              },
-              "secretName": "[variables('aadClientSecret')]"
-            }
-          },
-          "keyVaultName": {
-            "value": "[variables('existingKVName')]"
-          },
-          "keyVaultResourceGroup": {
-            "value": "[variables('existingKVRGName')]"
-          },
-          "useExistingKek": {
-            "value": "[variables('Encryption').useExistingKek]"
-          },
-          "keyEncryptionKeyURL": {
-            "value": "[variables('Encryption').keyEncryptionKeyURL]"
-          },
-          "volumeType": {
-            "value": "[variables('Encryption').volumeType]"
-          },
-          "sequenceVersion": {
-            "value": "[variables('Encryption').sequenceVersion]"
-          }
-        }
-      }
     }
 
   ],
