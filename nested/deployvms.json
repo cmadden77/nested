@@ -180,7 +180,7 @@
           "vmSize": "[variables('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[variables('vmName')]",
+          "computerName": "[concat(variables('vmName'),copyIndex(1))]",
           "adminUsername": "[variables('vmAdminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
