@@ -21,6 +21,18 @@
         "description": "password for domain and forlocal admin."
       }
     },
+    "workspaceId": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Workspace ID for OMS."
+      }
+    },
+    "workspaceKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Workspace Key for OMS."
+      }
+    },
     "existingRG": {
       "type": "string",
       "defaultValue": "temp-RG",
@@ -46,14 +58,14 @@
         "description": "ID location for Storage Account"
       }
     },
-      "uniqueid": {
-        "type": "string",
-        "defaultValue": "",
-        "metadata": {
-          "description": "Code for application or service"
-        }
+    "uniqueid": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Code for application or service"
       }
-    },
+    }
+  },
   "variables": {
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
@@ -299,39 +311,24 @@
           }
         },
         {
-          "name": "InstallOMS",
-          "type": "Microsoft.Resources/deployments",
-          "apiVersion": "[variables('apiVersion')]",
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(variables('vmName'),copyIndex(01), '/Microsoft.EnterpriseCloud.Monitoring')]",
+          "apiVersion": "2015-06-15",
+          "location": "[resourceGroup().location]",
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(01))]",
             "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(01),'/extensions/','Antimalware')]"
           ],
           "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-              "uri": "[concat(variables('Template').BaseUrl, variables('Template').oms)]",
-              "contentVersion": "1.0.0.0"
+            "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+            "type": "MicrosoftMonitoringAgent",
+            "typeHandlerVersion": "1.0",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "workspaceId": "[parameters('workspaceId')]"
             },
-            "parameters": {
-              "vmName": {
-                "value": "[reference('DeployVM').outputs.vmnames]"
-              },
-              "workspaceId": {
-                "reference": {
-                  "keyVault": {
-                    "id": "[concat(variables('subscriptionID'),variables('existingKVRGName'), '/providers/Microsoft.KeyVault/vaults/', variables('existingKVName'))]"
-                  },
-                  "secretName": "[variables('OMSWorkspace')]"
-                }
-              },
-              "workspaceKey": {
-                "reference": {
-                  "keyVault": {
-                    "id": "[concat(variables('subscriptionID'),variables('existingKVRGName'), '/providers/Microsoft.KeyVault/vaults/', variables('existingKVName'))]"
-                  },
-                  "secretName": "[variables('OMSPrimarySecret')]"
-                }
-              }
+            "protectedSettings": {
+              "workspaceKey": "[parameters('workspaceKey')]"
             }
           }
         }
