@@ -103,7 +103,7 @@
     "apiVersion": "2015-06-15",
     "domaintojoin": "corp.convatec.com",
     "configurationFunction": "iiswebsite.ps1\\iiswebsite",
-    "modulesUrl": "https://github.com/cmadden77/IFWeek2017/raw/master/iiswebsite.zip",
+    "modulesUrl":"https://github.com/cmadden77/IFWeek2017/raw/master/iiswebsite.zip",
 
     "subscriptionID": "/subscriptions/91716dc0-0018-48e4-84ad-db239ee753db/resourceGroups/",
     "existingKVRGName": "Restricted-Prod-EU2-RG",
