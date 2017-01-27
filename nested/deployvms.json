@@ -381,33 +381,33 @@
               "AADClientSecret": "[parameters('aadClientSecret')]"
             }
           }
-        },
-        {
-          "apiVersion": "2015-06-15",
-          "type": "Microsoft.Compute/virtualMachines",
-          "name": "[concat(variables('vmName'),copyIndex(1))]",
-          "location": "[resourceGroup().location]",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]",
-            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1),'/extensions/',variables('extensionName'))]"
-          ],
-          "properties": {
-            "storageProfile": {
-              "osDisk": {
-                "encryptionSettings": {
-                  "diskEncryptionKey": {
-                    "sourceVault": {
-                      "id": "[variables('keyVaultResourceID')]"
-                    },
-                    "secretUrl": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions',  variables('vmName'),copyIndex(1), variables('extensionName'))).instanceView.statuses[0].message]"
-                  }
-                }
+        }
+
+
+      ]
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('vmName'),copyIndex(1))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]"
+      ],
+      "properties": {
+        "storageProfile": {
+          "osDisk": {
+            "encryptionSettings": {
+              "diskEncryptionKey": {
+                "sourceVault": {
+                  "id": "[variables('keyVaultResourceID')]"
+                },
+                "secretUrl": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions',  variables('vmName'),copyIndex(1), variables('extensionName'))).instanceView.statuses[0].message]"
               }
             }
           }
         }
-
-      ]
+      }
     }
 
   ],
