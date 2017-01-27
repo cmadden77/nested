@@ -346,6 +346,10 @@
       "name": "EncryptVHD",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "[variables('apiVersion')]",
+      "copy": {
+        "name": "vmLoop",
+        "count": "[parameters('VMCount')]"
+      },
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]"
       ],
