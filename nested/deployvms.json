@@ -84,7 +84,7 @@
     "location": "[resourceGroup().location]",
     "vmOsSku": "2012-R2-Datacenter",
     "vmAdminUsername": "adadministrator",
-    "vmName": "[concat('azeu2', parameters('VMCode'))]",
+    "vmName": "[concat('azeu2', parameters('VMCode'),'0')]",
     "vmOsDiskName": "[concat('od', resourceGroup().name)]",
     "vmDataDiskName": "[concat('dd', resourceGroup().name)]",
     "vmSize": "Standard_A1",
@@ -133,7 +133,7 @@
     "encryptionOperation": "EnableEncryption",
     "keyEncryptionAlgorithm": "RSA-OAEP",
     "updateVmUrl": "[concat('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-encrypt-running-windows-vm/updatevm-',variables('Encryption').useExistingKek,'.json')]",
-    "keyVaultURL": "[concat('https://', variables('existingKVRGName'), '.vault.azure.net/')]",
+    "keyVaultURL": "[concat('https://', variables('existingKVName'), '.vault.azure.net/')]",
     "keyVaultResourceID": "[concat(subscription().id,'/resourceGroups/',variables('existingKVRGName'),'/providers/Microsoft.KeyVault/vaults/', variables('existingKVName'))]"
 
 
