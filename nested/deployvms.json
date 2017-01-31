@@ -70,6 +70,10 @@
       "metadata": {
         "description": "Code for application or service"
       }
+    },
+    "vmNames": {
+      "type": "array",
+      "defaultValue": [ ]
     }
   },
   "variables": {
@@ -387,5 +391,11 @@
       ]
     }
 
-  ]
- }
+  ],
+  "outputs": {
+    "Names": {
+      "type": "array",
+      "value": "[concat(variables('vmName'),copyIndex(1))]"
+    }
+  }
+}
