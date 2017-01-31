@@ -8,6 +8,12 @@
         "description": "Name of the Virtual Machine"
       }
     },
+    "vmCount": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Virtual Machine"
+      }
+    },
     "keyVaultResourceID": {
       "type": "string",
       "metadata": {
@@ -28,12 +34,21 @@
       }
     }
   },
+  "variables": {
+    "keyVaultSecretUrl": {
+      "value": "[reference(resourceId('Microsoft.Compute/virtualMachines/extensions',  parameters('vmName'),copyIndex(1), 'AzureDiskEncryption')).instanceView.statuses[0].message]"
+    }
+  },
   "resources": [
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vmName')]",
       "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "vmLoop",
+        "count": "[parameters('VMCount')]"
+      },
       "properties": {
         "storageProfile": {
           "osDisk": {
