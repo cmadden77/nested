@@ -357,34 +357,6 @@
               "workspaceKey": "[parameters('workspaceKey')]"
             }
           }
-        },
-        {
-          "type": "Microsoft.Compute/virtualMachines/extensions",
-          "name": "[concat(variables('vmName'),copyIndex(1),'/', variables('extensionName'))]",
-          "apiVersion": "2016-03-30",
-          "location": "[resourceGroup().location]",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1))]",
-            "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'),copyIndex(1),'/extensions/','Microsoft.EnterpriseCloud.Monitoring')]"
-          ],
-          "properties": {
-            "publisher": "Microsoft.Azure.Security",
-            "type": "AzureDiskEncryption",
-            "typeHandlerVersion": "[variables('extensionVersion')]",
-            "autoUpgradeMinorVersion": true,
-            "forceUpdateTag": "[variables('Encryption').sequenceVersion]",
-            "settings": {
-              "AADClientID": "[variables('aadClientID')]",
-              "KeyVaultURL": "[variables('keyVaultURL')]",
-              "KeyEncryptionKeyURL": "[variables('Encryption').keyEncryptionKeyURL]",
-              "KeyEncryptionAlgorithm": "[variables('keyEncryptionAlgorithm')]",
-              "VolumeType": "[variables('Encryption').volumeType]",
-              "EncryptionOperation": "[variables('encryptionOperation')]"
-            },
-            "protectedSettings": {
-              "AADClientSecret": "[parameters('aadClientSecret')]"
-            }
-          }
         }
 
 
