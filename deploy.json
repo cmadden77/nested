@@ -177,32 +177,6 @@
           }
         }
       }
-    },
-    {
-      "name": "updatevm",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "dependsOn": [
-        "[concat('Microsoft.Resources/deployments/', 'DeployVM')]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('Template').updatevm]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "vmName": {
-            "value": "[concat(variables('vmName'),copyIndex(1))]"
-          },
-          "vmCount": {
-            "value": "[parameters('VMCount')]"
-          },
-          "keyVaultResourceID": {
-            "value": "[variables('keyVaultResourceID')]"
-          }
-        }
-      }
     }
   ],
   "outputs": { }
